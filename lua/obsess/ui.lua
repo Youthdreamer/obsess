@@ -43,13 +43,13 @@ M.open = function()
 		vim.bo[state.buf].bufhidden = "hide"
 		vim.bo[state.buf].modifiable = false
 		vim.bo[state.buf].readonly = true
-		vim.bo[state.buf].wrap = true
 
 		state.win_id = vim.api.nvim_open_win(state.buf, false, opts.window) -- 返回打开的窗口id
 		vim.wo[state.win_id].number = false
 		vim.wo[state.win_id].relativenumber = false
 		vim.wo[state.win_id].cursorline = false
 		vim.wo[state.win_id].signcolumn = "no"
+		vim.wo[state.win_id].wrap = true
 	else
 		vim.notify("Window is already open!", vim.log.levels.INFO)
 	end
