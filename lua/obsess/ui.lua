@@ -72,6 +72,7 @@ M.close = function()
 	state.win_id = nil
 	state.buf = nil
 	state.running = false
+	state.tasks = {}
 end
 
 --- 确保 buffer 和 window 存在
