@@ -131,7 +131,7 @@ end
 
 M.timer = function()
 	ui.ensure_visible_buffer()
-	vim.ui.input({ prompt = "Enter minutes: ", default = config.options.time.minute }, function(input)
+	vim.ui.input({ prompt = "Enter minutes: ", default = tostring(config.options.time.minute or 0) }, function(input)
 		local minutes = tonumber(input)
 		if minutes then
 			start_minutes(minutes)
@@ -141,7 +141,7 @@ end
 
 M.timer_sec = function()
 	ui.ensure_visible_buffer()
-	vim.ui.input({ prompt = "Enter second: ", default = config.options.time.second }, function(input)
+	vim.ui.input({ prompt = "Enter second: ", default = tostring(config.options.time.second or 0)}, function(input)
 		local second = tonumber(input)
 		if second then
 			M.start(second)

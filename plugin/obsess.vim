@@ -3,5 +3,3 @@ if v:version < 900
 endif
 
 lua require("obsess").setup()
-
-
