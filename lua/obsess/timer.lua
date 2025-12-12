@@ -77,6 +77,7 @@ end
 --- 启动倒计时
 ---@param duration number  总秒数
 M.start = function(duration)
+	ui.ensure_visible_buffer()
 	local buf = state.buf
 	local win = state.win_id
 
@@ -130,8 +131,7 @@ local start_minutes = function(minutes)
 end
 
 M.timer = function()
-	ui.ensure_visible_buffer()
-	vim.ui.input({ text = "Enter minutes: ", default = tostring(config.options.time.minute or 0) }, function(input)
+	vim.ui.input({ prompt = "Enter minutes: ", default = tostring(config.options.time.minute or 0) }, function(input)
 		local minutes = tonumber(input)
 		if minutes then
 			start_minutes(minutes)
@@ -140,8 +140,7 @@ M.timer = function()
 end
 
 M.timer_sec = function()
-	ui.ensure_visible_buffer()
-	vim.ui.input({ text = "Enter second: ", default = tostring(config.options.time.second or 0)}, function(input)
+	vim.ui.input({ prompt = "Enter second: ", default = tostring(config.options.time.second or 0)}, function(input)
 		local second = tonumber(input)
 		if second then
 			M.start(second)

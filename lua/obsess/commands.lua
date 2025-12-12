@@ -1,6 +1,7 @@
 local config = require("obsess.config")
 local timer = require("obsess.timer")
 local ui = require("obsess.ui")
+local state = config.state
 
 local M = {}
 
@@ -69,9 +70,18 @@ M.setup = function()
 	end, { desc = "Delete task interactively" })
 
 	vim.api.nvim_create_user_command("ObsessTaskClear", function()
-		vim.ui.select({ "No", "Yes" }, { prompt = "Clear all tasks?" }, function(choice)
-			if choice == "Yes" then
+
+		if next(state.tasks) == nil then
+			vim.notify("No tasks to clear", vim.log.levels.WARN)
+			return
+		end
+
+		vim.ui.select({ "YES", "NO" }, { prompt = "Clear all tasks?" }, function(choice)
+			if choice == "YES" then
 				require("obsess.tasks").clear()
+				if not state.timer then
+					ui.close()
+				end
 			end
 		end)
 	end, { desc = "Clear all tasks with confirm" })
