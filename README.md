@@ -40,36 +40,39 @@ vim.keymap.set("n", "<leader>ot", ":ObsessTimer<CR>", { desc = "Start Obsess Tim
 
 ```lua
 return {
-    "Youthdreamer/obsess",
-    cmd = { "ObsessTimer", "ObsessTimerSec", "ObsessTaskAdd" },
-    opts = {
-        window = {
-            relative = "editor",
-            anchor = "NE",
-            col = vim.o.columns,
-            row = 0,
-            width = 30,
-            height = 5,
-            border = "rounded",
-            style = "minimal",
-        },
-        -- 倒计时结束后的弹窗提醒设置
-        flash = {
-            times = 6, -- 闪烁次数
-            interval_ms = 300, -- 每次间隔时间
-        }
+  "Youthdreamer/obsess",
+  cmd = { "ObsessTimer", "ObsessTimerSec", "ObsessTaskAdd" },
+  opts = {
+    position = "center", -- 可选位置参数option: "center" | "top-right" | "top-left" | "bottom-left" | "bottom-right"
+    window = {
+      relative = "editor",
+      width = 40,
+      height = 15,
+      border = "rounded",
+      style = "minimal",
+      title = "Obsess"
     },
-    -- 快捷键设置
-    keys = {
-      { "<leader>os", "<cmd>ObsessToggle<cr>", desc = "切换窗口" },
-      { "<leader>oc", "<cmd>ObsessClose<cr>", desc = "注销" },
-      { "<leader>oo", "<cmd>ObsessTimer<cr>", desc = "设置定时器" },
-      { "<leader>ol", "<cmd>ObsessTimerSec<cr>", desc = "设置定时器" },
-      { "<leader>oa", "<cmd>ObsessTaskAdd<cr>", desc = "添加任务" },
-      { "<leader>ot", "<cmd>ObsessTaskDone<cr>", desc = "切换任务状态" },
-      { "<leader>od", "<cmd>ObsessTaskDel<cr>", desc = "删除任务" },
-      { "<leader>oe", "<cmd>ObsessTaskClear<cr>", desc = "清空任务列表" },
+    -- 倒计时结束后的弹窗提醒设置
+    flash = {
+      times = 6, -- 闪烁次数
+      interval_ms = 300, -- 每次间隔时间
     },
+    time = {
+      minute = 25, -- 默认25分钟
+      second = 90, -- 默认90秒
+    },
+  },
+  -- 快捷键设置
+  keys = {
+    { "<leader>os", "<cmd>ObsessToggle<cr>", desc = "切换窗口" },
+    { "<leader>oc", "<cmd>ObsessClose<cr>", desc = "注销" },
+    { "<leader>oo", "<cmd>ObsessTimer<cr>", desc = "设置定时器" },
+    { "<leader>ol", "<cmd>ObsessTimerSec<cr>", desc = "设置定时器" },
+    { "<leader>oa", "<cmd>ObsessTaskAdd<cr>", desc = "添加任务" },
+    { "<leader>ot", "<cmd>ObsessTaskDone<cr>", desc = "切换任务状态" },
+    { "<leader>od", "<cmd>ObsessTaskDel<cr>", desc = "删除任务" },
+    { "<leader>oe", "<cmd>ObsessTaskClear<cr>", desc = "清空任务列表" },
+  },
 }
 ```
 
@@ -106,20 +109,23 @@ vim.keymap.set("n", "<leader>os", ":ObsessTaskAdd<CR>", { desc = "Add Obsess Tas
 
 ```lua
 require("obsess").setup({
+  position = "center",
   window = {
     relative = "editor",
-    anchor = "NE",
-    col = vim.o.columns,
-    row = 0,
-    width = 30,
-    height = 5,
+    width = 40,
+    height = 15,
     border = "rounded",
-    style = "minimal"
+    style = "minimal",
+    title = "Obsess"
   },
   flash = {
     times = 6,
-    interval_ms = 300
-  }
+    interval_ms = 300,
+  },
+  time = {
+    minute = 25,
+    second = 90,
+  },
 })
 ```
 

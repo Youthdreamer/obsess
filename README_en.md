@@ -42,36 +42,40 @@ vim.keymap.set("n", "<leader>ot", ":ObsessTimer<CR>", { desc = "Start Obsess Tim
 
 ```lua
 return {
-    "Youthdreamer/obsess",
-    cmd = { "ObsessTimer", "ObsessTimerSec", "ObsessTaskAdd" },
-    opts = {
-        window = {
-            relative = "editor",
-            anchor = "NE",
-            col = vim.o.columns,
-            row = 0,
-            width = 30,
-            height = 5,
-            border = "rounded",
-            style = "minimal",
-        },
-        -- Flash alert when timer ends
-        flash = {
-            times = 6, -- Number of flashes
-            interval_ms = 300, -- Interval between flashes
-        }
+  "Youthdreamer/obsess",
+  cmd = { "ObsessTimer", "ObsessTimerSec", "ObsessTaskAdd" },
+  opts = {
+
+    position = "center", -- Available position options: "center" | "top-right" | "top-left" | "bottom-left" | "bottom-right"
+    window = {
+      relative = "editor",
+      width = 40,
+      height = 15,
+      border = "rounded",
+      style = "minimal",
+      title = "Obsess"
     },
-    -- Key mappings
-    keys = {
-      { "<leader>os", "<cmd>ObsessToggle<cr>", desc = "Toggle Window" },
-      { "<leader>oc", "<cmd>ObsessClose<cr>", desc = "Close Window" },
-      { "<leader>oo", "<cmd>ObsessTimer<cr>", desc = "Set Timer" },
-      { "<leader>ol", "<cmd>ObsessTimerSec<cr>", desc = "Set Timer" },
-      { "<leader>oa", "<cmd>ObsessTaskAdd<cr>", desc = "Add Task" },
-      { "<leader>ot", "<cmd>ObsessTaskDone<cr>", desc = "Toggle Task Status" },
-      { "<leader>od", "<cmd>ObsessTaskDel<cr>", desc = "Delete Task" },
-      { "<leader>oe", "<cmd>ObsessTaskClear<cr>", desc = "Clear All Tasks" },
+    -- Notification settings for when the countdown finishes
+    flash = {
+      times = 6, -- Number of times the window flashes
+      interval_ms = 300, -- Interval between each flash (in milliseconds)
     },
+    time = {
+      minute = 25, -- Default: 25 minutes
+      second = 90, -- Default: 90 seconds
+    },
+  },
+  -- Key mappings
+  keys = {
+    { "<leader>os", "<cmd>ObsessToggle<cr>", desc = "Toggle Window" },
+    { "<leader>oc", "<cmd>ObsessClose<cr>", desc = "Close Window" },
+    { "<leader>oo", "<cmd>ObsessTimer<cr>", desc = "Set Timer" },
+    { "<leader>ol", "<cmd>ObsessTimerSec<cr>", desc = "Set Timer" },
+    { "<leader>oa", "<cmd>ObsessTaskAdd<cr>", desc = "Add Task" },
+    { "<leader>ot", "<cmd>ObsessTaskDone<cr>", desc = "Toggle Task Status" },
+    { "<leader>od", "<cmd>ObsessTaskDel<cr>", desc = "Delete Task" },
+    { "<leader>oe", "<cmd>ObsessTaskClear<cr>", desc = "Clear All Tasks" },
+  },
 }
 ```
 
@@ -108,20 +112,23 @@ You can customize Obsess behavior in the `setup()` function:
 
 ```lua
 require("obsess").setup({
+  position = "center",
   window = {
     relative = "editor",
-    anchor = "NE",
-    col = vim.o.columns,
-    row = 0,
-    width = 30,
-    height = 5,
+    width = 40,
+    height = 15,
     border = "rounded",
-    style = "minimal"
+    style = "minimal",
+    title = "Obsess",
   },
   flash = {
     times = 6,
     interval_ms = 300
-  }
+  },
+  time = {
+    minute = 25,
+    second = 90,
+  },
 })
 ```
 

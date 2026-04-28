@@ -1,7 +1,5 @@
 local M = {}
 
-local columns = vim.o.columns -- 屏幕总列数
-
 ---@class FlashConfig
 ---@field times integer 闪烁次数
 ---@field interval_ms integer 每次间隔（毫秒）
@@ -26,26 +24,29 @@ local default_time = {
 local default_window = {
 	relative = "editor",
 	anchor = "NE",
-	col = columns,
 	row = 0,
-	width = 30,
-	height = 5,
+	col = 0,
+	width = 40,
+	height = 15,
 	border = "rounded",
 	style = "minimal",
 }
 
 -- 设置默认配置
 --- @class ObsessConfig
+--- @field position string
 --- @field window vim.api.keyset.win_config
 --- @field flash FlashConfig
 --- @field time TimeConfig
 
 ---@type ObsessConfig
 M.defaults = {
+	position = "center", -- 默认居中
 	window = default_window,
 	flash = default_flash,
 	time = default_time,
 }
+
 -- 最终配置
 ---@type ObsessConfig
 M.options = vim.deepcopy(M.defaults)
