@@ -76,6 +76,38 @@ return {
 }
 ```
 
+### vim.pack安装
+
+```lua
+-- 安装插件
+vim.pack.add({
+  { src = "https://github.com/Youthdreamer/obsess" },
+})
+-- 导入插件并配置与设置快捷键
+require("obsess").setup({
+  position = "center",
+  window = {
+    width  = 60,
+    height = 15,
+    title  = "Obsess",
+  },
+  -- 倒计时结束后的弹窗提醒设置
+  flash = {
+    times = 6,         -- 闪烁次数
+    interval_ms = 300, -- 每次间隔时间
+  }
+})
+
+vim.keymap.set("n", "<leader>os", "<cmd>ObsessToggle<CR>", { desc = "切换窗口" })
+vim.keymap.set("n", "<leader>oc", "<cmd>ObsessClose<CR>", { desc = "注销" })
+vim.keymap.set("n", "<leader>oo", "<cmd>ObsessTimer<CR>", { desc = "设置定时器(m)" })
+vim.keymap.set("n", "<leader>ol", "<cmd>ObsessTimerSec<CR>", { desc = "设置定时器(s)" })
+vim.keymap.set("n", "<leader>oa", "<cmd>ObsessTaskAdd<CR>", { desc = "添加任务" })
+vim.keymap.set("n", "<leader>ot", "<cmd>ObsessTaskDone<CR>", { desc = "切换任务状态" })
+vim.keymap.set("n", "<leader>od", "<cmd>ObsessTaskDel<CR>", { desc = "删除任务" })
+vim.keymap.set("n", "<leader>oe", "<cmd>ObsessTaskClear<CR>", { desc = "清空任务列表" })
+```
+
 ---
 
 ## 📋 命令一览（支持 LazyVim 快捷调用）

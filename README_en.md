@@ -79,7 +79,40 @@ return {
 }
 ```
 
+### vim.pack Configuration Example
+
+```lua
+-- Install
+vim.pack.add({
+  { src = "https://github.com/Youthdreamer/obsess" },
+})
+
+require("obsess").setup({
+  position = "center",
+  window = {
+    width  = 60,
+    height = 15,
+    title  = "Obsess",
+  },
+  flash = {
+    times = 6,
+    interval_ms = 300,
+  }
+})
+
+vim.keymap.set("n", "<leader>os", "<cmd>ObsessToggle<CR>", { desc = "Toggle Window" })
+vim.keymap.set("n", "<leader>oc", "<cmd>ObsessClose<CR>", { desc = "Close Window" })
+vim.keymap.set("n", "<leader>oo", "<cmd>ObsessTimer<CR>", { desc = "Set Timer(m)" })
+vim.keymap.set("n", "<leader>ol", "<cmd>ObsessTimerSec<CR>", { desc = "Set Timer(s)" })
+vim.keymap.set("n", "<leader>oa", "<cmd>ObsessTaskAdd<CR>", { desc = "Add Task" })
+vim.keymap.set("n", "<leader>ot", "<cmd>ObsessTaskDone<CR>", { desc = "Toggle Task Status" })
+vim.keymap.set("n", "<leader>od", "<cmd>ObsessTaskDel<CR>", { desc = "Delete Task" })
+vim.keymap.set("n", "<leader>oe", "<cmd>ObsessTaskClear<CR>", { desc = "Clear all Tasks" })
+```
+
 ---
+
+清空任务列表
 
 ## 📋 Command List (LazyVim Friendly)
 
