@@ -67,6 +67,14 @@ function M.toggle_done(index)
   end
 end
 
+--- 加载任务
+function M.load()
+  if state.tasks == nil or next(state.tasks) == nil then
+    vim.notify("No tasks to clear", vim.log.levels.WARN)
+  end
+  M.render()
+end
+
 --- 清空所有任务
 function M.clear()
   state.tasks = {}

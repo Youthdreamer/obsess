@@ -1,6 +1,7 @@
 local config = require("obsess.config")
 local timer = require("obsess.timer")
 local ui = require("obsess.ui")
+local tasks = require("obsess.tasks")
 local state = config.state
 
 local M = {}
@@ -26,7 +27,7 @@ M.setup = function()
   vim.api.nvim_create_user_command("ObsessTaskAdd", function()
     vim.ui.input({ prompt = "Enter task: " }, function(input)
       if input and input ~= "" then
-        require("obsess.tasks").add(input)
+        tasks.add(input)
       else
         vim.notify("No task entered", vim.log.levels.WARN)
       end
@@ -46,7 +47,7 @@ M.setup = function()
     end
     vim.ui.select(items, { prompt = "Select task to toggle" }, function(_, idx)
       if idx then
-        require("obsess.tasks").toggle_done(idx)
+        tasks.toggle_done(idx)
       end
     end)
   end, { desc = "Toggle task done interactively" })
@@ -64,7 +65,7 @@ M.setup = function()
     end
     vim.ui.select(items, { prompt = "Select task to delete" }, function(_, idx)
       if idx then
-        require("obsess.tasks").remove(idx)
+        tasks.remove(idx)
       end
     end)
   end, { desc = "Delete task interactively" })
@@ -77,13 +78,21 @@ M.setup = function()
 
     vim.ui.select({ "YES", "NO" }, { prompt = "Clear all tasks?" }, function(choice)
       if choice == "YES" then
-        require("obsess.tasks").clear()
+        tasks.clear()
         if not state.timer then
           ui.close()
         end
       end
     end)
   end, { desc = "Clear all tasks with confirm" })
+
+  vim.api.nvim_create_user_command("ObsessTaskLoad", function()
+    if next(state.tasks) == nil then
+      vim.notify("No tasks to clear", vim.log.levels.WARN)
+      return
+    end
+    tasks.load()
+  end, { desc = "Load all tasks" })
 end
 
 return M

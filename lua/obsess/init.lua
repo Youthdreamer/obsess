@@ -52,5 +52,7 @@ M.tasks_add = tasks.add
 M.tasks_del = tasks.remove
 M.tasks_toggle = tasks.toggle_done
 M.tasks_clear = tasks.clear
+M.tasks_load = tasks.load
+
 
 return M
