@@ -70,7 +70,7 @@ end
 --- 加载任务
 function M.load()
   if state.tasks == nil or next(state.tasks) == nil then
-    vim.notify("No tasks to clear", vim.log.levels.WARN)
+    vim.notify("No tasks to load", vim.log.levels.WARN)
   end
   M.render()
 end
