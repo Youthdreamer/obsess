@@ -1,4 +1,4 @@
-if v:version < 900
+if v:version < 1000
   finish
 endif
 

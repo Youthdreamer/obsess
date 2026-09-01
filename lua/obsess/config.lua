@@ -80,16 +80,16 @@ function M.get_project_info(bufnr, marker)
   local short_hash = vim.fn.sha256(root_path):sub(1, 8)
   -- 清理特殊字符
   local safe_name = repo_name:gsub("[^%w_%.-]", "_")
-  local fianl_file_name = safe_name .. "_" .. short_hash .. ".json"
+  local final_file_name = safe_name .. "_" .. short_hash .. ".json"
 
-  local obsess_file = vim.fn.stdpath('data') .. '/obsess/' .. fianl_file_name .. ".json"
+  local obsess_file = vim.fn.stdpath('data') .. '/obsess/' .. final_file_name
   return repo_name, obsess_file
 end
 
 function M.setup(opts)
   -- 获取最终的用户配置选项
   M.options = vim.tbl_deep_extend("force", {}, M.defaults, opts or {})
-  local repo_name, obsess_file = M.get_project_info(_, M.options.marker)
+  local repo_name, obsess_file = M.get_project_info(nil, M.options.marker)
   M.obsess_file = obsess_file
 end
 
