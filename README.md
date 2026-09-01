@@ -3,9 +3,9 @@
 ### 🔗 Language: [中文](README.md) | [English](README_en.md)
 
 ![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
-![Neovim](https://img.shields.io/badge/Neovim-%4E%3D%200.9-green.svg)
+![Neovim](https://img.shields.io/badge/Neovim-%3E%3D%200.10-green.svg)
 
-Obsess 是一个为开发者设计的 NeoVim 专注计时插件。它将**倒计时定时器**与**任务管理**合二为一，所有内容显示在一个简洁美观的原生浮动窗口中，并且任务会自动持久化保存——重启 NeoVim 后依然保留。推荐使用 [lazy.nvim](https://github.com/folke/lazy.nvim) 插件管理器安装。
+Obsess 是一个为开发者设计的 NeoVim 专注计时插件。它将**倒计时定时器**与**任务管理**合二为一，所有内容显示在一个简洁美观的原生浮动窗口中，并且任务会自动持久化保存——重启 NeoVim 后依然保留，且**按项目隔离**（每个项目一份独立的任务数据）。推荐使用 [lazy.nvim](https://github.com/folke/lazy.nvim) 插件管理器安装。
 
 ---
 
@@ -13,7 +13,7 @@ Obsess 是一个为开发者设计的 NeoVim 专注计时插件。它将**倒计
 
 - **⏱️ 倒计时定时器**：设置指定时间专注工作，倒计时结束后自动提醒
 - **✅ 任务管理**：添加、删除、标记完成/未完成，一个轻量 TODO 面板
-- **💾 任务持久化**：任务自动保存到本地 JSON 文件，重启不丢失
+- **💾 任务持久化**：任务按项目自动保存到独立 JSON 文件，重启不丢失，项目之间互不干扰
 - **🪟 原生浮动窗口**：界面简洁美观，支持 5 个位置，随编辑器尺寸变化自动调整
 - **✨ 边框闪烁提醒**：倒计时结束，窗口边框闪烁，醒目提醒
 - **🎨 高度可配置**：窗口位置、大小、边框样式、闪烁次数、默认时长均可自定义
@@ -22,7 +22,7 @@ Obsess 是一个为开发者设计的 NeoVim 专注计时插件。它将**倒计
 
 ## 📋 环境要求
 
-- **Neovim ≥ 0.9**
+- **Neovim ≥ 0.10**
 
 ---
 
@@ -63,6 +63,7 @@ return {
     "ObsessTaskAdd", "ObsessTaskDone", "ObsessTaskDel", "ObsessTaskClear", "ObsessTaskLoad",
   },
   opts = {
+    marker = { ".git" }, -- 项目根识别标记（默认 { ".git" }，用于按项目分文件保存任务）
     position = "center", -- 可选：center | top-left | top-right | bottom-left | bottom-right
     window = {
       relative = "editor",
@@ -112,6 +113,7 @@ vim.pack.add({
 
 -- 导入插件并配置
 require("obsess").setup({
+  marker = { ".git" }, -- 项目根识别标记（默认 { ".git" }）
   position = "center",
   window = {
     width  = 60,
@@ -179,6 +181,7 @@ vim.keymap.set("n", "<leader>ol", "<cmd>ObsessTaskLoad<CR>", { desc = "刷新任
 
 | 选项 | 类型 | 默认值 | 说明 |
 | --- | --- | --- | --- |
+| `marker` | table | `{ ".git" }` | 项目根识别标记，传给 `vim.fs.root` 向上查找；找不到时回退到当前目录 |
 | `position` | string | `"center"` | 窗口位置，可选：`center` / `top-left` / `top-right` / `bottom-left` / `bottom-right` |
 | `window` | table | 见下 | 浮动窗口参数，透传给 `nvim_open_win` |
 | `window.relative` | string | `"editor"` | 窗口相对基准 |
@@ -192,10 +195,29 @@ vim.keymap.set("n", "<leader>ol", "<cmd>ObsessTaskLoad<CR>", { desc = "刷新任
 | `time.minute` | number | `25` | `:ObsessTimer` 输入框默认分钟数 |
 | `time.second` | number | `90` | `:ObsessTimerSec` 输入框默认秒数 |
 
+**项目识别（`marker`）**
+
+`marker` 决定任务按哪个"项目"归档：插件加载时用 `vim.fs.root` 从当前 buffer（或其文件所在目录）开始**逐级向上**查找，命中的第一个祖先目录即认定为项目根，任务文件命名为 `项目名_8位哈希.json`；一路找不到任何标记时，回退到当前工作目录。
+
+默认值 `{ ".git" }`：以 Git 仓库根为项目边界，适合大多数场景。
+
+标记支持三种写法：
+
+- **单个字符串**：`".git"` —— 找第一个含 `.git` 的祖先目录
+- **扁平列表（严格优先级）**：`{ ".git", "package.json" }` —— 先全盘找 `.git`（从近到远，任一命中即返回），全程没有才找 `package.json`。前面的标记永远优先，与距离无关
+- **嵌套列表（等优先级组 + 后备）**：`{ { "stylua.toml", ".luarc.json" }, ".git" }` —— 第一轮向上找"含 `stylua.toml` **或** `.luarc.json` 的最近一层"（组内一视同仁，谁近算谁）；一轮下来都没有，再第二轮找 `.git`
+
+> 要点：**嵌套组内"谁近算谁"；不同组之间，前面的组永远优先（不管距离）**。例如目录 `~/repos/myapp/`（含 `.git`、`stylua.toml`）下的 `src/` 子目录含 `.luarc.json` 时：嵌套写法会以 `src/` 为项目根（最近命中），而扁平写法 `{ "stylua.toml", ".luarc.json", ".git" }` 会以 `myapp/` 为根（stylua.toml 优先）。
+
+- 常见标记：`"package.json"`、`"Cargo.toml"`、`"pyproject.toml"`、`"go.mod"`、`".gitignore"` 等；marker 也支持函数（等优先级与函数标记为较新版本能力，完整语法见 `:help vim.fs.root`）
+- 当前 buffer 未命名（无关联文件）或 `buftype` 非空（如终端）时，查找直接从当前目录开始
+- 回退到当前目录时，不同目录（即使属于同一项目）会各自生成任务文件
+
 完整示例：
 
 ```lua
 require("obsess").setup({
+  marker = { ".git", "package.json" }, -- 项目根识别标记（可选）
   position = "top-right",
   window = {
     relative = "editor",
@@ -270,9 +292,11 @@ require("obsess").close_win()
 
 ## 💾 数据持久化
 
-任务列表会自动保存到 `stdpath('data')/obsess/obsess.json`（Linux 下通常为 `~/.local/share/nvim/obsess/obsess.json`）：
+任务**按项目隔离**，每个项目一份独立文件，保存在 `stdpath('data')/obsess/` 下，文件名为 `项目名_8位哈希.json`（如 `myapp_3f2a9c81.json`；Linux 下目录为 `~/.local/share/nvim/obsess/`）：
 
-- 插件初始化时自动读取该文件并恢复任务
+- 项目根通过 `vim.fs.root` 向上查找 `marker` 标记（默认 `.git`）确定，找不到时回退到当前工作目录；插件加载时确定，一个会话绑定一个项目
+- 文件在**首次添加任务**时自动创建（自动 `mkdir -p` 建目录），插件启动时只读取、不创建
+- 插件初始化时自动读取当前项目的文件并恢复任务
 - 添加、删除、切换状态、清空任务后，会将**整个内存列表**覆写回文件，无需手动保存
 - 若 JSON 文件损坏，插件会提示错误并重置为空列表
 - `:ObsessClose` 只停止计时并关闭窗口，不会清空任务，也不会写文件
@@ -283,7 +307,7 @@ require("obsess").close_win()
 
 1. **配合 which-key**：安装 [which-key.nvim](https://github.com/folke/which-key.nvim) 后，`<leader>o` 分组会自动聚合上述快捷键；lazy.nvim 的 `keys` 配置开箱即与 which-key 兼容，给 `desc` 写清说明即可获得友好的提示。
 2. **设置默认时长**：配置 `time.minute` / `time.second` 后，启动计时时直接回车即可使用默认值。
-3. **当作轻量 TODO 使用**：任务跨会话保留，随时用 `:ObsessTaskAdd` 记录待办，`<leader>ox` 勾选完成。
+3. **当作轻量 TODO 使用**：任务按项目隔离且跨会话保留——每个项目一套独立任务，随时用 `:ObsessTaskAdd` 记录待办，`<leader>ox` 勾选完成。
 4. **计时结束后的再次计时**：倒计时结束后（显示 `⏰ Time's up!`），如需重新计时，请先 `:ObsessClose` 重置再启动。
 
 ---
@@ -292,7 +316,8 @@ require("obsess").close_win()
 
 - **再次启动计时器没反应？** 计时器运行中再次启动会提示 `Timer already running`。倒计时结束后如需重新计时，请先执行 `:ObsessClose`。
 - **`:ObsessClose` 会删除我的任务吗？** 不会。它只停止计时并关闭窗口，内存与持久化文件中的任务都会保留，关闭后可以继续添加或勾选任务。
-- **任务存在哪里？** 见上文「数据持久化」一节。
+- **任务存在哪里？** 每个项目一份独立文件，位于 `stdpath('data')/obsess/<项目名>_<8位哈希>.json`，详见「数据持久化」一节。
+- **为什么换个项目任务就不一样了？** 任务按项目根（默认以 `.git` 标记识别）分文件保存，项目之间互不影响；同一 Neovim 会话内切换目录不会切换任务列表。
 
 ---
 

@@ -3,9 +3,9 @@
 ### 🔗 Language: [中文](README.md) | [English](README_en.md)
 
 ![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
-![Neovim](https://img.shields.io/badge/Neovim-%3E%3D%200.9-green.svg)
+![Neovim](https://img.shields.io/badge/Neovim-%3E%3D%200.10-green.svg)
 
-Obsess is a focus timer plugin for NeoVim, designed for developers. It combines a **countdown timer** with **task management**, all displayed in a clean native floating window. Your tasks are automatically persisted to a local JSON file, so they survive restarts. Recommended installation via the [lazy.nvim](https://github.com/folke/lazy.nvim) plugin manager.
+Obsess is a focus timer plugin for NeoVim, designed for developers. It combines a **countdown timer** with **task management**, all displayed in a clean native floating window. Your tasks are automatically persisted to local JSON files, so they survive restarts — and tasks are **isolated per project** (each project gets its own independent task data). Recommended installation via the [lazy.nvim](https://github.com/folke/lazy.nvim) plugin manager.
 
 ---
 
@@ -13,7 +13,7 @@ Obsess is a focus timer plugin for NeoVim, designed for developers. It combines 
 
 - **⏱️ Countdown Timer**: Set a focus session and get reminded automatically when time is up
 - **✅ Task Management**: Add, delete, and toggle tasks done/undone — a lightweight TODO panel
-- **💾 Task Persistence**: Tasks are auto-saved to a local JSON file and survive restarts
+- **💾 Task Persistence**: Tasks are auto-saved per project to independent JSON files and survive restarts — projects don't interfere with each other
 - **🪟 Native Floating Window**: Clean UI with 5 position presets, auto-repositioned on editor resize
 - **✨ Border Flash Alert**: The window border flashes when the countdown finishes
 - **🎨 Highly Configurable**: Window position, size, border style, flash behavior, and default durations
@@ -22,7 +22,7 @@ Obsess is a focus timer plugin for NeoVim, designed for developers. It combines 
 
 ## 📋 Requirements
 
-- **Neovim ≥ 0.9**
+- **Neovim ≥ 0.10**
 
 ---
 
@@ -63,6 +63,7 @@ return {
     "ObsessTaskAdd", "ObsessTaskDone", "ObsessTaskDel", "ObsessTaskClear", "ObsessTaskLoad",
   },
   opts = {
+    marker = { ".git" }, -- Project root markers (default: { ".git" }, used for per-project task files)
     position = "center", -- Available: center | top-left | top-right | bottom-left | bottom-right
     window = {
       relative = "editor",
@@ -112,6 +113,7 @@ vim.pack.add({
 
 -- Configure
 require("obsess").setup({
+  marker = { ".git" }, -- Project root markers (default: { ".git" })
   position = "center",
   window = {
     width  = 60,
@@ -179,6 +181,7 @@ vim.keymap.set("n", "<leader>ol", "<cmd>ObsessTaskLoad<CR>", { desc = "Refresh T
 
 | Option           | Type   | Default      | Description                                  |
 | ---------------- | ------ | ------------ | -------------------------------------------- |
+| `marker`         | table  | `{ ".git" }` | Project root markers, passed to `vim.fs.root` to walk up; falls back to the current directory if none is found |
 | `position`       | string | `"center"`   | Window position: `center` / `top-left` / `top-right` / `bottom-left` / `bottom-right` |
 | `window`         | table  | see below    | Floating window config, passed through to `nvim_open_win` |
 | `window.relative`| string | `"editor"`   | Window relative base                         |
@@ -192,10 +195,29 @@ vim.keymap.set("n", "<leader>ol", "<cmd>ObsessTaskLoad<CR>", { desc = "Refresh T
 | `time.minute`    | number | `25`         | Default minutes for `:ObsessTimer` prompt    |
 | `time.second`    | number | `90`         | Default seconds for `:ObsessTimerSec` prompt |
 
+**Project detection (`marker`)**
+
+`marker` decides which "project" your tasks belong to: when the plugin loads, `vim.fs.root` starts from the current buffer (or its file's directory) and walks **up one directory at a time**; the first ancestor directory containing a marker is treated as the project root, and the task file is named `projectname_8charhash.json`. If no marker is found anywhere, it falls back to the current working directory.
+
+The default is `{ ".git" }` — the Git repository root is the project boundary, suitable for most scenarios.
+
+Markers support three forms:
+
+- **A single string**: `".git"` — find the first ancestor directory containing `.git`
+- **A flat list (strict priority)**: `{ ".git", "package.json" }` — first look for `.git` across all ancestors (nearest match wins); only if it's nowhere do we look for `package.json`. Earlier markers always take priority, regardless of distance
+- **A nested list (equal-priority group + fallback)**: `{ { "stylua.toml", ".luarc.json" }, ".git" }` — the first pass walks up for the nearest directory containing **either** `stylua.toml` **or** `.luarc.json` (treated equally, nearest wins); if neither exists anywhere, a second pass looks for `.git`
+
+> Key point: **inside a nested group, the nearest match wins; between groups, earlier groups always take priority (regardless of distance)**. For example, with `~/repos/myapp/` (containing `.git` and `stylua.toml`) and a `src/` subdirectory containing `.luarc.json`: the nested form resolves to `src/` as the project root (nearest hit), while the flat form `{ "stylua.toml", ".luarc.json", ".git" }` resolves to `myapp/` (stylua.toml wins).
+
+- Common markers: `"package.json"`, `"Cargo.toml"`, `"pyproject.toml"`, `"go.mod"`, `".gitignore"`, etc.; function markers are also supported (equal-priority groups and function markers are newer features — see `:help vim.fs.root` for the full syntax)
+- If the current buffer is unnamed (no backing file) or has a non-empty `buftype` (e.g. a terminal), the search starts directly from the current directory
+- When falling back to the current directory, different directories (even within the same project) produce separate task files
+
 Full example:
 
 ```lua
 require("obsess").setup({
+  marker = { ".git", "package.json" }, -- Project root markers (optional)
   position = "top-right",
   window = {
     relative = "editor",
@@ -270,8 +292,10 @@ require("obsess").close_win()
 
 ## 💾 Data Persistence
 
-Your tasks are automatically saved to `stdpath('data')/obsess/obsess.json` (usually `~/.local/share/nvim/obsess/obsess.json` on Linux):
+Tasks are **isolated per project** — each project gets its own file, saved under `stdpath('data')/obsess/` with the name `projectname_8charhash.json` (e.g. `myapp_3f2a9c81.json`; the directory is `~/.local/share/nvim/obsess/` on Linux):
 
+- The project root is determined by walking up with `vim.fs.root` looking for the `marker` files (default: `.git`); it falls back to the current working directory if none is found. It is resolved when the plugin loads, so one session binds to one project
+- The file is created automatically on the **first task add** (with `mkdir -p`); the plugin only reads it at startup and never creates it eagerly
 - Tasks are loaded and restored automatically when the plugin initializes
 - Adding, deleting, toggling, or clearing tasks writes the **entire in-memory list** back to the file automatically — no manual saving needed
 - If the JSON file is corrupted, the plugin reports an error and resets to an empty list
@@ -283,7 +307,7 @@ Your tasks are automatically saved to `stdpath('data')/obsess/obsess.json` (usua
 
 1. **Pair with which-key**: Install [which-key.nvim](https://github.com/folke/which-key.nvim) and the `<leader>o` group will automatically aggregate the keymaps above; lazy.nvim's `keys` config works with which-key out of the box — write clear `desc` strings for friendly hints.
 2. **Set default durations**: Configure `time.minute` / `time.second`, then just press Enter at the prompt to use the defaults.
-3. **Use it as a lightweight TODO**: Tasks persist across sessions — jot down todos with `:ObsessTaskAdd` and check them off with `<leader>ox`.
+3. **Use it as a lightweight TODO**: Tasks are isolated per project and persist across sessions — each project gets its own task list; jot down todos with `:ObsessTaskAdd` and check them off with `<leader>ox`.
 4. **Restarting after a finished timer**: Once the countdown ends (showing `⏰ Time's up!`), run `:ObsessClose` first to reset before starting a new one.
 
 ---
@@ -292,7 +316,8 @@ Your tasks are automatically saved to `stdpath('data')/obsess/obsess.json` (usua
 
 - **Nothing happens when I start the timer again?** Starting while a timer is running shows `Timer already running`. After a countdown finishes, run `:ObsessClose` before starting a new one.
 - **Does `:ObsessClose` delete my tasks?** No. It only stops the timer and closes the window; tasks are kept both in memory and in the persistence file, so you can keep adding or toggling tasks afterwards.
-- **Where are my tasks stored?** See the "Data Persistence" section above.
+- **Where are my tasks stored?** Each project gets its own file at `stdpath('data')/obsess/<projectname>_<8charhash>.json` — see the "Data Persistence" section above.
+- **Why do my tasks look different in another project?** Tasks are saved per project root (detected by the `.git` marker by default), so projects don't interfere with each other; changing directories within the same Neovim session does not switch the task list.
 
 ---
 
