@@ -91,6 +91,10 @@ M.setup = function()
       return
     end
     require("obsess.tasks").load()
+    -- 如果窗口隐藏则打开
+    if not state.win_id or not vim.api.nvim_win_is_valid(state.win_id) then
+      ui.toggle_win()
+    end
   end, { desc = "Load all tasks" })
 end
 
