@@ -76,7 +76,13 @@ function M.get_project_info(bufnr, marker)
     return
   end
 
-  local obsess_file = vim.fn.stdpath('data') .. '/obsess/' .. repo_name .. ".json"
+  -- 对根路径生成短哈希（默认 8 位）
+  local short_hash = vim.fn.sha256(root_path):sub(1, 8)
+  -- 清理特殊字符
+  local safe_name = repo_name:gsub("[^%w_%.-]", "_")
+  local fianl_file_name = safe_name .. "_" .. short_hash .. ".json"
+
+  local obsess_file = vim.fn.stdpath('data') .. '/obsess/' .. fianl_file_name .. ".json"
   return repo_name, obsess_file
 end
 
