@@ -6,33 +6,28 @@ local command = require("obsess.commands")
 
 local M = {}
 
--- 创建持久化文件，读取文件内容
-local init_obsess_file = function(obsess_file)
-  if vim.fn.filereadable(obsess_file) == 1 then
-    -- 文件存在读取内容，并写入到。config.state.tasks
-    local ok, res = pcall(function()
-      local lines = vim.fn.readfile(obsess_file)
-      local raw = table.concat(lines, "\n")
-      local obsess_table = vim.json.decode(raw)
-      config.state.tasks = obsess_table
-    end)
-    if not ok then
-      vim.notify(string.format("JSON file is malformed. please chaeck at: %s", obsess_file), vim.log.levels.ERROR)
-      config.state.tasks = {}
-      return nil
-    end
-    return res
-  else
-    -- 文件不存在创建文件
-    local dir = vim.fn.fnamemodify(obsess_file, ':h')
 
-    if vim.fn.isdirectory(dir) == 0 then
-      vim.fn.mkdir(dir, 'p')
-    end
-    vim.fn.writefile("[]", obsess_file) -- 创建持久化json文件
+-- 读取文件内容
+local init_obsess_file = function(obsess_file)
+  -- 文件不存在：初始化空任务，静默返回（不报错）
+  if vim.fn.filereadable(obsess_file) == 0 then
+    config.state.tasks = {}
+    return
+  end
+  -- 文件存在读取内容，并写入到。config.state.tasks
+  local ok, obsess_tasks_table = pcall(function()
+    local raw = table.concat(vim.fn.readfile(obsess_file), "\n")
+    return vim.json.decode(raw)
+  end)
+  -- 处理
+  if ok then
+    config.state.tasks = obsess_tasks_table
+  else
+    -- 解析失败提示错误
+    vim.notify(string.format("JSON file is malformed. please chaeck at: %s", obsess_file), vim.log.levels.ERROR)
+    config.state.tasks = {}
   end
 end
-
 
 function M.setup(opts)
   config.setup(opts)
@@ -53,6 +48,5 @@ M.tasks_del = tasks.remove
 M.tasks_toggle = tasks.toggle_done
 M.tasks_clear = tasks.clear
 M.tasks_load = tasks.load
-
 
 return M

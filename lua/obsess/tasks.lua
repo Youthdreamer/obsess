@@ -2,13 +2,32 @@ local config = require("obsess.config")
 local ui = require("obsess.ui")
 local state = config.state
 
-
 local M = {}
 
-local save_obsess_json = function(data)
+-- 创建持久化文件
+local create_obsess_file = function(obsess_file)
+  if type(obsess_file) == 'nil' then
+    return
+  end
+
+  if vim.fn.filereadable(obsess_file) == 0 then
+    -- 文件不存在创建文件
+    local dir = vim.fn.fnamemodify(obsess_file, ':h')
+
+    if vim.fn.isdirectory(dir) == 0 then
+      vim.fn.mkdir(dir, 'p')
+    end
+    vim.fn.writefile("[]", obsess_file) -- 创建持久化json文件
+  end
+end
+
+local save_obsess_json = function(data, obsess_file)
+  if type(obsess_file) == 'nil' then
+    return
+  end
   local data_final = setmetatable(data, vim.json.array)
   local json_str = vim.json.encode(data_final, { indent = " " })
-  vim.fn.writefile(vim.split(json_str, "\n"), config.obsess_file)
+  vim.fn.writefile(vim.split(json_str, "\n"), obsess_file)
 end
 
 --- 更新 buffer，把剩余时间 + 任务列表一起写入
@@ -43,8 +62,9 @@ end
 --- 添加任务
 ---@param text string
 function M.add(text)
+  create_obsess_file(config.obsess_file) -- 只在 首次添加任务时创建文件
   table.insert(state.tasks, { text = text, done = false })
-  save_obsess_json(state.tasks)
+  save_obsess_json(state.tasks, config.obsess_file)
   M.render()
 end
 
@@ -52,7 +72,7 @@ end
 ---@param index number
 function M.remove(index)
   table.remove(state.tasks, index)
-  save_obsess_json(state.tasks)
+  save_obsess_json(state.tasks, config.obsess_file)
   M.render()
 end
 
@@ -62,7 +82,7 @@ function M.toggle_done(index)
   local task = state.tasks[index]
   if task then
     task.done = not task.done
-    save_obsess_json(state.tasks)
+    save_obsess_json(state.tasks, config.obsess_file)
     M.render()
   end
 end
@@ -78,7 +98,7 @@ end
 --- 清空所有任务
 function M.clear()
   state.tasks = {}
-  save_obsess_json(state.tasks)
+  save_obsess_json(state.tasks, config.obsess_file)
   M.render()
 end
 
